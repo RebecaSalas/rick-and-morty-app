@@ -13,4 +13,4 @@ Una aplicación interactiva que permite a los usuarios buscar y explorar persona
 - Diseño responsivo para una experiencia óptima en dispositivos móviles y de escritorio.
 - Integración con la API oficial de *Rick and Morty*.
 
-[➡️](https://rebecasalas.github.io/rick-and-morty-app/)
+[➡️Buscador_Rick and Morty](https://rebecasalas.github.io/rick-and-morty-app/)
