@@ -1,7 +1,13 @@
-// URL base de la API de Rick and Morty
+// =======================
+// Constantes 
+// =======================
 const API_URL = "https://rickandmortyapi.com/api/";
+const iconoOscuro = document.getElementById("icono-modo-oscuro");
+const iconoClaro = document.getElementById("icono-modo-claro");
 
-// Variables para almacenar filtros y estado de la aplicación
+// =======================
+// Variables 
+// =======================
 let busqueda = "";
 let tipo = "character";
 let status = "";
@@ -9,37 +15,28 @@ let gender = "";
 let paginaActual = 1;
 let totalResultados = 0;
 
-// Función principal para obtener datos desde la API
-async function obtenerResultados(busqueda, tipo, pagina) {
-    let endpoint = `${API_URL}${tipo}/?`;
-    if (busqueda) endpoint += `name=${busqueda}&`;
-    if (status) endpoint += `status=${status}&`;
-    if (gender) endpoint += `gender=${gender}&`;
-    endpoint += `page=${pagina}`;
+// =======================
+// Funciones de Vista
+// =======================
 
-    try {
-        const respuesta = await fetch(endpoint);
-        if (!respuesta.ok) throw new Error("Error en la solicitud");
-
-        const datos = await respuesta.json();
-
-        if (datos.results && datos.results.length > 0) {
-            totalResultados = datos.info.count;
-            mostrarResultados(datos.results, tipo);
-            actualizarPaginado(datos.info.pages, pagina);
-            actualizarTotalResultados(totalResultados);
-        } else {
-            mostrarMensaje("No se encontraron resultados para tu búsqueda.");
-        }
-    } catch (error) {
-        mostrarMensaje("Hubo un problema al cargar los datos.");
-    }
+// Función para volver a la vista principal
+function volverAVistaPrincipal() {
+    const resultadosSeccion = document.getElementById("resultados-seccion");
+    resultadosSeccion.innerHTML = `
+        <p id="total-resultados" class="text-lg font-semibold text-gray-700 mb-4"></p>
+        <div id="resultados" class="grid grid-cols-2 md:grid-cols-4 gap-6"></div>
+    `;
 }
 
-// Función para mostrar resultados en la cuadrícula principal
+// Función para limpiar los resultados anteriores
+function limpiarResultados() {
+    document.getElementById("resultados").innerHTML = "";
+}
+
+// Función para mostrar los resultados de la búsqueda
 function mostrarResultados(resultados, tipo) {
     const contenedor = document.getElementById("resultados");
-    limpiarResultados(); // Vaciar el contenedor antes de agregar nuevos resultados
+    limpiarResultados();
 
     resultados.forEach((item) => {
         const tarjeta = document.createElement("div");
@@ -61,10 +58,85 @@ function mostrarResultados(resultados, tipo) {
                     <p class="text-sm text-gray-500">Código: ${item.episode}</p>
                 </div>
             `;
-        // Asignar el evento de clic para mostrar más detalles
+
+        // Agrega evento para mostrar detalles al hacer clic
         tarjeta.addEventListener("click", () => mostrarDetalles(item.id, tipo));
         contenedor.appendChild(tarjeta);
     });
+}
+
+// Función para mostrar un mensaje si no hay resultados
+function mostrarMensaje(mensaje) {
+    limpiarResultados();
+    const contenedor = document.getElementById("resultados");
+    const mensajeElemento = document.createElement("p");
+    mensajeElemento.className = "text-center text-red-500 font-bold";
+    mensajeElemento.textContent = mensaje;
+    contenedor.appendChild(mensajeElemento);
+}
+
+// Función para mostrar la cantidad total de resultados encontrados
+function actualizarTotalResultados(total) {
+    document.getElementById("total-resultados").innerText = `${total} RESULTADOS`;
+}
+
+// Función para mostrar el número de página actual y habilitar o deshabilitar botones
+function actualizarPaginado(totalPaginas, paginaActual) {
+    const infoPagina = document.getElementById("info-pagina");
+    if (!infoPagina) return;
+    infoPagina.innerText = `Página ${paginaActual} de ${totalPaginas}`;
+
+    document.getElementById("boton-anterior").disabled = paginaActual <= 1;
+    document.getElementById("boton-siguiente").disabled = paginaActual >= totalPaginas;
+    document.getElementById("boton-primera").disabled = paginaActual <= 1;
+    document.getElementById("boton-ultima").disabled = paginaActual >= totalPaginas;
+}
+
+// Función para mostrar u ocultar los filtros según el tipo seleccionado
+function actualizarVisibilidadFiltros() {
+    const tipoSeleccionado = document.getElementById("filtro-tipo").value;
+    const contenedorStatus = document.getElementById("contenedor-status");
+    const contenedorGender = document.getElementById("contenedor-gender");
+
+    contenedorStatus.style.display = tipoSeleccionado === "episode" ? "none" : "block";
+    contenedorGender.style.display = tipoSeleccionado === "episode" ? "none" : "block";
+}
+
+// =======================
+// Funciones de API
+// =======================
+
+// Función para obtener resultados de la API
+async function obtenerResultados(busqueda, tipo, pagina) {
+    let endpoint = `${API_URL}${tipo}/?`;
+    if (busqueda) endpoint += `name=${busqueda}&`;
+    if (status) endpoint += `status=${status}&`;
+    if (gender) endpoint += `gender=${gender}&`;
+    endpoint += `page=${pagina}`;
+
+    try {
+        const respuesta = await fetch(endpoint);
+
+        if (respuesta.status === 404) {
+            mostrarMensaje("No se encontraron coincidencias.");
+            return;
+        }
+
+        if (!respuesta.ok) throw new Error("Error en la solicitud");
+
+        const datos = await respuesta.json();
+
+        if (datos.results?.length > 0) {
+            totalResultados = datos.info.count;
+            mostrarResultados(datos.results, tipo);
+            actualizarPaginado(datos.info.pages, pagina);
+            actualizarTotalResultados(totalResultados);
+        } else {
+            mostrarMensaje("No se encontraron resultados para tu búsqueda.");
+        }
+    } catch {
+        mostrarMensaje("Hubo un problema al cargar los datos.");
+    }
 }
 
 // Función para mostrar detalles de un personaje o episodio
@@ -89,88 +161,51 @@ async function mostrarDetalles(id, tipo) {
                             <p><strong>Gender:</strong> ${datos.gender}</p>
                             <p><strong>Origin:</strong> ${datos.origin.name}</p>
                             <p><strong>Location:</strong> ${datos.location.name}</p>
-                            <p><strong>Episodes:</strong> ${
-                                datos.episode
-                                    .map(
-                                        (ep) =>
-                                            `<a href="${ep}" target="_blank">${ep.split('/').pop()}</a>`
-                                    )
-                                    .join(", ")
-                            }</p>
+                            <p><strong>Episodes:</strong> ${datos.episode.map(ep => `<a href="${ep}" target="_blank">${ep.split('/').pop()}</a>`).join(", ")}</p>
                         `
                         : `
                             <p><strong>Fecha de lanzamiento:</strong> ${datos.air_date}</p>
                             <p><strong>Código:</strong> ${datos.episode}</p>
-                            <p><strong>Personajes:</strong> ${
-                                datos.characters
-                                    .map(
-                                        (char) =>
-                                            `<a href="${char}" target="_blank">${char.split('/').pop()}</a>`
-                                    )
-                                    .join(", ")
-                            }</p>
+                            <p><strong>Personajes:</strong> ${datos.characters.map(char => `<a href="${char}" target="_blank">${char.split('/').pop()}</a>`).join(", ")}</p>
                         `
                 }
+                <button id="volver" class="mt-4 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700">
+                    Volver a Resultados
+                </button>
             </div>
         `;
+
+        // Agrega evento al botón para volver a la vista principal
+        document.getElementById("volver").addEventListener("click", volverAVistaPrincipal);
     } catch {
         mostrarMensaje("Hubo un problema al cargar los detalles.");
     }
 }
 
-// Función para mostrar/ocultar filtros según el tipo seleccionado
-function actualizarVisibilidadFiltros() {
-    const tipoSeleccionado = document.getElementById("filtro-tipo").value;
-    const contenedorStatus = document.getElementById("contenedor-status");
-    const contenedorGender = document.getElementById("contenedor-gender");
+// =======================
+// Configuración Inicial
+// =======================
 
-    if (tipoSeleccionado === "episode") {
-        contenedorStatus.style.display = "none";
-        contenedorGender.style.display = "none";
-    } else {
-        contenedorStatus.style.display = "block";
-        contenedorGender.style.display = "block";
-    }
+// Mostrar u ocultar filtros en base al tipo seleccionado
+actualizarVisibilidadFiltros();
+
+// Aplicar modo claro/oscuro desde localStorage
+const modoGuardado = localStorage.getItem("modo");
+if (modoGuardado === "oscuro") {
+    document.documentElement.classList.add("dark");
+    iconoOscuro.classList.add("hidden");
+    iconoClaro.classList.remove("hidden");
+} else {
+    document.documentElement.classList.remove("dark");
+    iconoClaro.classList.add("hidden");
+    iconoOscuro.classList.remove("hidden");
 }
 
+// =======================
+// Eventos
+// =======================
 
-// Función para actualizar los controles de paginación
-function actualizarPaginado(totalPaginas, paginaActual) {
-    const infoPagina = document.getElementById("info-pagina");
-    if (!infoPagina) return;
-    infoPagina.innerText = `Página ${paginaActual} de ${totalPaginas}`;
-
-    document.getElementById("boton-anterior").disabled = paginaActual <= 1;
-    document.getElementById("boton-siguiente").disabled = paginaActual >= totalPaginas;
-    document.getElementById("boton-primera").disabled = paginaActual <= 1;
-    document.getElementById("boton-ultima").disabled = paginaActual >= totalPaginas;
-}
-
-// Función para limpiar el contenedor de resultados
-function limpiarResultados() {
-    document.getElementById("resultados").innerHTML = "";
-}
-
-// Función para mostrar el total de resultados
-function actualizarTotalResultados(total) {
-    document.getElementById("total-resultados").innerText = `${total} RESULTADOS`;
-}
-
-// Función para mostrar mensajes de error o información
-function mostrarMensaje(mensaje) {
-    limpiarResultados();
-    const contenedor = document.getElementById("resultados");
-    const mensajeElemento = document.createElement("p");
-    mensajeElemento.className = "text-center text-red-500 font-bold";
-    mensajeElemento.textContent = mensaje;
-    contenedor.appendChild(mensajeElemento);
-}
-
-// Control de modo claro/oscuro
-const iconoOscuro = document.getElementById("icono-modo-oscuro");
-const iconoClaro = document.getElementById("icono-modo-claro");
-
-// Activar modo oscuro
+// Eventos para cambiar entre modo oscuro y claro
 iconoOscuro.addEventListener("click", () => {
     document.documentElement.classList.add("dark");
     localStorage.setItem("modo", "oscuro");
@@ -178,7 +213,6 @@ iconoOscuro.addEventListener("click", () => {
     iconoClaro.classList.remove("hidden");
 });
 
-// Activar modo claro
 iconoClaro.addEventListener("click", () => {
     document.documentElement.classList.remove("dark");
     localStorage.setItem("modo", "claro");
@@ -186,17 +220,20 @@ iconoClaro.addEventListener("click", () => {
     iconoOscuro.classList.remove("hidden");
 });
 
+// Evento para cambiar el tipo de búsqueda (character o episode)
+document.getElementById("filtro-tipo").addEventListener("change", () => {
+    actualizarVisibilidadFiltros();
+    volverAVistaPrincipal();
+    busqueda = "";
+    obtenerResultados(busqueda, tipo, 1);
+});
 
-
-
-// Evento para cambiar visibilidad de filtros al cambiar tipo
-document.getElementById("filtro-tipo").addEventListener("change", actualizarVisibilidadFiltros);
-
-
-
-// Evento para el formulario de búsqueda
+// Evento para realizar búsqueda
 document.getElementById("barra-busqueda").addEventListener("submit", (evento) => {
     evento.preventDefault();
+    volverAVistaPrincipal();
+
+    // Obtener valores de los campos
     busqueda = document.getElementById("campo-busqueda").value.trim();
     tipo = document.getElementById("filtro-tipo").value;
     status = document.getElementById("filtro-status").value || "";
@@ -206,7 +243,7 @@ document.getElementById("barra-busqueda").addEventListener("submit", (evento) =>
     obtenerResultados(busqueda, tipo, paginaActual);
 });
 
-// Eventos para los botones de paginación
+// Eventos para paginación
 document.getElementById("boton-primera").addEventListener("click", () => {
     paginaActual = 1;
     obtenerResultados(busqueda, tipo, paginaActual);
@@ -230,24 +267,7 @@ document.getElementById("boton-ultima").addEventListener("click", () => {
     obtenerResultados(busqueda, tipo, paginaActual);
 });
 
-
-// Evento para cargar datos automáticamente
+// // Evento para cargar datos automáticamente
 window.addEventListener("load", () => {
     obtenerResultados("", "character", 1);
 });
-
-
-actualizarVisibilidadFiltros(); // Mostrar u ocultar filtros en el inicio
-
-// Aplicar el modo guardado en localStorage al cargar la página
-const modoGuardado = localStorage.getItem("modo");
-if (modoGuardado === "oscuro") {
-    document.documentElement.classList.add("dark");
-    iconoOscuro.classList.add("hidden");
-    iconoClaro.classList.remove("hidden");
-} else {
-    document.documentElement.classList.remove("dark");
-    iconoClaro.classList.add("hidden");
-    iconoOscuro.classList.remove("hidden");
-}
-
