@@ -1,0 +1,77 @@
+@import url('https://fonts.googleapis.com/css2?family=Bangers&display=swap');
+
+/* Estilo del Logo */
+#logo {
+    font-family: 'Bangers', cursive;
+    font-size: 2.5rem;
+    background-color: #0e0d0d;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    text-transform: uppercase;
+}
+
+/* Fondo General */
+body {
+    background-color: #f7f7f7;
+    color: #333333;
+}
+
+/* Modo Oscuro */
+html.dark body {
+    background-color: #1a202c;
+    color: #f7fafc;
+}
+
+html.dark body h3 {
+    color: #222629;
+}
+
+html.dark header {
+    background-color: black;
+}
+
+html.dark #logo {
+    background-color: #e62429;
+    color: white;
+}
+
+html.dark i {
+    color: #312d2d;
+}
+
+/* Estilo base para las tarjetas */
+.tarjeta {
+    max-width: 300px;
+    margin: auto;
+    overflow: hidden;
+    border-radius: 8px;
+}
+
+/* Control para las imágenes dentro de las tarjetas */
+.imagen-tarjeta {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+
+/* Diseño para detalles */
+.detalle {
+    max-width: 600px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.detalle-imagen {
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto 1rem;
+    border-radius: 10px;
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+}
